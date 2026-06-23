@@ -1,0 +1,489 @@
+{
+  "name": "Review El Wezara",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://www.onetonline.org/link/summary/{{ $json.output }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        0
+      ],
+      "id": "2e3491d7-845c-4f34-9ddb-3efc5791cfda",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "#content, .occupation-title, .occupation-code, .job-zone"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "85c232e3-2224-4b3f-9a84-1c4925d8f577",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 16000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        208
+      ],
+      "id": "f0cc5398-f402-45f1-b2b5-cf78631fc6e0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FchnRRbkOizmgoI",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"properties\": {\n    \"job_title\": { \"type\": \"string\" },\n    \"nos_code\": { \"type\": \"string\" },\n    \"occupation\": { \"type\": \"string\" },\n    \"sector\": { \"type\": \"string\" },\n    \"sub_sector\": { \"type\": \"string\" },\n    \"oqf_level\": { \"type\": \"string\" },\n    \"isco_08_code\": { \"type\": \"string\" },\n    \"isco_08_level\": { \"type\": \"string\" },\n    \"gcc_co_code\": { \"type\": \"string\" },\n    \"job_description\": { \"type\": \"string\" },\n    \"job_requirements\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" }\n    },\n    \"career_opportunities\": { \"type\": \"string\" },\n    \"units_list\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"unit_code\": { \"type\": \"string\" },\n          \"unit_title\": { \"type\": \"string\" },\n          \"unit_type\": { \"type\": \"string\", \"enum\": [\"Domain\", \"Generic\", \"Elective\"] },\n          \"oqf_level\": { \"type\": \"string\" },\n          \"overview\": { \"type\": \"string\" },\n          \"scope_elements\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" },\n            \"minItems\": 4,\n            \"maxItems\": 5\n          },\n          \"performance_criteria_list\": {\n            \"type\": \"array\",\n            \"minItems\": 12,\n            \"maxItems\": 13,\n            \"items\": {\n              \"type\": \"object\",\n              \"additionalProperties\": false,\n              \"properties\": {\n                \"pc_code\": { \"type\": \"string\" },\n                \"pc_text\": { \"type\": \"string\" },\n                \"element_ref\": { \"type\": \"string\" },\n                \"importance\": { \"type\": \"integer\", \"minimum\": 1, \"maximum\": 5 },\n                \"difficulty\": { \"type\": \"integer\", \"minimum\": 1, \"maximum\": 5 },\n                \"related_knowledge\": {\n                  \"anyOf\": [\n                    { \"type\": \"string\" },\n                    {\n                      \"type\": \"array\",\n                      \"items\": {\n                        \"type\": \"object\",\n                        \"additionalProperties\": false,\n                        \"properties\": {\n                          \"code\": { \"type\": \"string\" },\n                          \"text\": { \"type\": \"string\" }\n                        },\n                        \"required\": [\"code\", \"text\"]\n                      }\n                    }\n                  ]\n                },\n                \"related_skills\": {\n                  \"type\": \"array\",\n                  \"minItems\": 2,\n                  \"items\": { \"type\": \"string\" }\n                }\n              },\n              \"required\": [\"pc_code\", \"pc_text\", \"element_ref\", \"importance\", \"difficulty\", \"related_knowledge\", \"related_skills\"]\n            }\n          },\n          \"domain_skills\": {\n            \"type\": \"array\",\n            \"minItems\": 12,\n            \"maxItems\": 13,\n            \"items\": { \"type\": \"string\" }\n          },\n          \"generic_skills_proficiency\": {\n            \"type\": \"array\",\n            \"minItems\": 11,\n            \"maxItems\": 11,\n            \"items\": {\n              \"type\": \"object\",\n              \"additionalProperties\": false,\n              \"properties\": {\n                \"skill_number\": { \"type\": \"integer\" },\n                \"skill_name\": { \"type\": \"string\" },\n                \"proficiency\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 5 }\n              },\n              \"required\": [\"skill_number\", \"skill_name\", \"proficiency\"]\n            }\n          }\n        },\n        \"required\": [\"unit_code\", \"unit_title\", \"unit_type\", \"oqf_level\", \"overview\", \"scope_elements\", \"performance_criteria_list\", \"domain_skills\", \"generic_skills_proficiency\"]\n      }\n    }\n  },\n  \"required\": [\"job_title\", \"nos_code\", \"occupation\", \"sector\", \"sub_sector\", \"oqf_level\", \"isco_08_code\", \"isco_08_level\", \"gcc_co_code\", \"job_description\", \"job_requirements\", \"career_opportunities\", \"units_list\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        272
+      ],
+      "id": "3f2d89f1-9380-46e6-96fb-db3bb87e5096",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b4161f4e-aaaf-4f73-a212-b39c0cae3bcd",
+      "name": "job_code",
+      "webhookId": "bdb68b3f-ad15-43f6-af64-91c4bce5ce5b"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=\"You are an expert job analyst. The user will give you a job title in Arabic. Your ONLY job is to identify the most accurate O*NET-SOC code (formatted like XX-XXXX.XX) for this job. Respond ONLY with the code number, nothing else.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6a607db3-e901-473f-9a69-e486d27bc104",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "c8b904c3-f87c-47bd-9387-a9afaa799793",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FchnRRbkOizmgoI",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2320,
+        96
+      ],
+      "id": "751c1c94-a9d1-4e34-8583-d10319d118f3",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://demo.gotenberg.dev/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        64
+      ],
+      "id": "1c2af533-42dd-40b6-b58e-febacca65e22",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an elite NOS (National Occupational Standards) developer for the General Directorate of Training (GDT), Ministry of Labour, Sultanate of Oman.\n\nThe following is occupational data extracted from O*NET for the requested occupation. Use ALL information provided to generate a complete and detailed NOS document matching the requested JSON schema layout perfectly and complying with strict ministerial structural constraints.\n\nOCCUPATIONAL DATA:\n{{ $json.content }}\n\n════════════════════════════════════════════\nCODING SYSTEM — CRITICAL\n════════════════════════════════════════════\nNOS Code format: [SECTOR_CODE]-NOS[OCCUPATION_2DIGITS][JOBROLE_2DIGITS]\nExample: MMP-NOS0110, HT-NOS0201, FB-NOS0103\n\nUnit Code format: [SECTOR_CODE]-US[OCCUPATION_2DIGITS][UNIT_SEQUENTIAL_2DIGITS]\nExample: MMP-US0115, MMP-US0116, MMP-US0117\nCRITICAL: Unit numbering is SEQUENTIAL and CONTINUOUS — if previous NOS ended at US0118, next starts at US0119. For a new NOS with no prior units, start from US0101.\n\nSECTOR CODES (2-3 letters):\n- Manufacturing Metal/Non-Metal = MMP\n- Manufacturing Food/Beverage = MFB\n- Tourism/Hospitality = TH\n- Information Technology = IT\n- Construction = CON\n- Healthcare = HC\n- Oil and Gas = OG\n- Logistics = LOG\n\n════════════════════════════════════════════\nPART 1 — NOS SPECIFICATIONS & LAYOUT\n════════════════════════════════════════════\nGenerate these fields:\n- job_title: Official English job title\n- nos_code: Per coding system above (e.g. MMP-NOS0110)\n- occupation: Broader occupational group (e.g. \"Manufacture of rubber and plastic products\")\n- sector: Main sector (e.g. \"Manufacturing\")\n- sub_sector: Sub-sector (e.g. \"Metallic and Non-Metallic Products\")\n- oqf_level: Single number as string (e.g., \"4\") — determined by majority of unit OQF levels. Use OQF level descriptors: Level 3=basic operative, Level 4=skilled operative, Level 5=technician.\n- isco_08_code: 4-digit ISCO-08 code with title (e.g. \"8142-Plastic Products Machine Operators\")\n- isco_08_level: Skill level number only (1, 2, 3, or 4)\n- gcc_co_code: Write exactly \"From MOL\"\n- job_description: EXACTLY 3 to 5 sentences summarizing and synthesizing the content directly from both the Domain Specific and Generic units combined. It must answer: what does this person do, how, and why.\n- job_requirements: Bullet-point list including: minimum education, certifications, age/experience, physical requirements, RPL note.\n- career_opportunities: Describe a strict vertical career path from entry level up to head level formatted as a structured hierarchy simulating a progressive employment pyramid (e.g., \"Entry Level: [Title] -> Skilled Level: [Title] -> Supervisor Level: [Title] -> Head Level: [Title]\").\n\n════════════════════════════════════════════\nPART 2 — UNIT STANDARDS COMPOSITION\n════════════════════════════════════════════\nGenerate units_list with this EXACT strict composition:\n- EXACTLY 4 to 5 DOMAIN units (unit_type: \"Domain\") — representing core technical functions.\n- EXACTLY 3 GENERIC units (unit_type: \"Generic\") — representing workplace and foundational requirements.\n- Elective units (unit_type: \"Elective\") ONLY if specialization exists — otherwise omit entirely.\n\nFOR EACH UNIT generate:\n- unit_code: Per coding system (e.g. MMP-US0101)\n- unit_title: Active verb + object (e.g. \"Operate plastic moulding press machine\")\n- unit_type: \"Domain\", \"Generic\", or \"Elective\"\n- oqf_level: String number \"3\" to \"7\" per OQF descriptors\n- overview: EXACTLY 2 to 3 sentences — what the unit covers and who it is for.\n- scope_elements: Array of EXACTLY 4 to 5 scopes. Each scope item must start with a capital letter and a strong action verb (e.g. \"Verify the details in the worksheet\").\n- performance_criteria_list: Array containing EXACTLY 12 to 13 Performance Criteria (PC) objects per unit.\n\n════════════════════════════════════════════\nPART 3 — PERFORMANCE CRITERIA (PC) & KNOWLEDGE (K) RULES \n════════════════════════════════════════════\nu must have 12 or 13 PERFORMANCE CRITERIA (PC) and 6 Knowledge (K)\nEach PC object within the array must strictly comply with the following:\n- pc_code: Sequential within unit — \"PC 1\", \"PC 2\", ..., up to \"PC 12\" or \"PC 13\".\n- pc_text: MUST start with a capital letter and a strong action VERB (e.g., \"Check\", \"Monitor\", \"Execute\"). Written in the format: \"The individual must be able to: [verb] [object] [context]\". Must be specific, measurable, and free of uppercase-only strings.\n- element_ref: Which scope element this PC belongs to (e.g. \"Element 1\", \"Element 2\").\n- importance: Integer 1-5\n- difficulty: Integer 1-5\n- related_knowledge: Array containing EXACTLY 5 to 6 knowledge (K) items mapped specifically to this PC.\n  CRITICAL RULE FOR KNOWLEDGE: Every single knowledge item text MUST start strictly with a NOUN (e.g., \"Knowledge of...\", \"Methods for...\", \"Types of...\", \"Procedures for...\", \"Importance of...\"). Absolutely NO verb-initial or lowercase-initial phrasings allowed for knowledge.\n  Format code as K_[PC number]_[item number] (e.g., K_1_1, K_1_2).\n\n════════════════════════════════════════════\nPART 4 — DOMAIN SKILLS SUMMARY\n════════════════════════════════════════════\nFor each unit, generate domain_skills:\n- Array containing EXACTLY 12 to 13 practical skills mapping across the entire unit.\n- Format: \"DS [number]. [Action verb] + [object]\" (e.g., \"DS 1. Operate the machine control panel\").\n\n════════════════════════════════════════════\nPART 5 — GENERIC SKILLS TABLE\n════════════════════════════════════════════\nFor each unit, generate generic_skills_proficiency:\nArray of EXACTLY 11 objects with proficiency level per skill (integer 0-5).\nCRITICAL: You must provide EXACTLY 11 items in this exact order: \n1. Communication, \n2. Numeracy, \n3. Information and Communication Technology Skills, \n4. Values and Ethics, \n5. Managing Work, \n6. Critical Thinking and Problem Solving, \n7. Creativity, Innovation and Entrepreneurship, \n8. Coordinating with Others, \n9. Judgment and Decision Making, \n10. Service Orientation, \n11. Learning to Learn.\n\n════════════════════════════════════════════\nJSON ESCAPING RULES — ULTRA CRITICAL\n════════════════════════════════════════════\n- All string values must be strictly continuous text on a single line. \n- Absolute prohibition of literal newlines (\\n) or unescaped double quotes (\\\") inside any text property values.\n- Clean all generated descriptions and text fields from brackets, extra quotation marks, or tabs that could break JSON syntax.\n\nRespond ONLY with a raw JSON object matching the requested schema. Do not include any markdown formatting like ```json or ```, and do not include any conversational text. Start directly with { and end with }.",
+        "options": {
+          "systemMessage": "u must have 12 or 13 PERFORMANCE CRITERIA (PC) and 6 Knowledge (K)\n\n\nReturn ONLY raw JSON. \n\nNo markdown.\nNo code fences.\nNo explanations.\nNo notes.\nNo preamble.\nNo trailing text.\n\nOutput must begin with {\nOutput must end with }\n\nDo not wrap inside:\n\"output\"\n\"result\"\n\"data\"\n\nReturn exactly one JSON object matching the provided schema.\n\nEvery required field must exist.\n\nRules:\n- performance_criteria_list: minimum 5 items per unit\n- generic_skills_proficiency: exactly 11 items\n- scope_elements: 3 to 5 items\n- domain_skills: minimum 3 items\n- related_knowledge: minimum 3 items\n- related_skills: minimum 2 items\n\nIf unsure, still return valid JSON matching schema.\n\nJSON only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        992,
+        0
+      ],
+      "id": "e36435d8-5f9e-4d51-871f-aa7ce6935a7d",
+      "name": "AI Agent BluePrint"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════\n// SAFE JSON PARSER & CLEANER NODE (REPLACES PARSER NODE)\n// ═══════════════════════════════════════════════\n\n// 1. هات النص اللي خارج من الـ Agent\nlet rawText = $input.item.json.output; \n\nif (!rawText) {\n    return [{ json: { error: \"No output found from AI Agent.\" } }];\n}\n\n// 2. تنظيف النص لو الـ AI استهبل وحط علامات ```json\nrawText = rawText.trim();\nif (rawText.startsWith(\"```json\")) {\n    rawText = rawText.replace(/^```json/, \"\").replace(/```$/, \"\").trim();\n} else if (rawText.startsWith(\"```\")) {\n    rawText = rawText.replace(/^```/, \"\").replace(/```$/, \"\").trim();\n}\n\nlet parsedJson;\ntry {\n    // 3. محاولة تحويل النص لـ JSON حقيقي\n    parsedJson = JSON.parse(rawText);\n} catch (e) {\n    // لو الـ JSON فيه غلطة، بنحاول نلقط أول { وأخر } عشان ننقذ الداتا\n    const startIdx = rawText.indexOf('{');\n    const endIdx = rawText.lastIndexOf('}');\n    if (startIdx !== -1 && endIdx !== -1) {\n        try {\n            parsedJson = JSON.parse(rawText.substring(startIdx, endIdx + 1));\n        } catch (innerError) {\n            return [{ json: { error: \"Failed to parse JSON even after cleaning.\", details: e.message, raw: rawText } }];\n        }\n    } else {\n        return [{ json: { error: \"Response is not a valid JSON structure.\", raw: rawText } }];\n    }\n}\n\n// 4. ترتيب وتأمين الـ 12 Performance Criteria والـ Knowledge كاملين دون أي نقص\nif (parsedJson.units_list && Array.isArray(parsedJson.units_list)) {\n    parsedJson.units_list.forEach(unit => {\n        if (unit.performance_criteria_list && Array.isArray(unit.performance_criteria_list)) {\n            \n            // ترتيب الـ PCs تصاعدياً (PC 1, PC 2 ... PC 12) لضمان سلامة العرض\n            unit.performance_criteria_list.sort((a, b) => {\n                const numA = parseInt(a.pc_code.replace(/\\D/g, '')) || 0;\n                const numB = parseInt(b.pc_code.replace(/\\D/g, '')) || 0;\n                return numA - numB;\n            });\n\n            unit.performance_criteria_list.forEach(pc => {\n                // التأكد التام إن الـ related_knowledge واصلة كـ Array سليم ومطابق للبرومبت\n                if (Array.isArray(pc.related_knowledge)) {\n                    // إذا جاءت جاهزة ومقسمة كـ Objects أو Strings بنسيبها تعبر بسلاسة\n                } else if (typeof pc.related_knowledge === 'string') {\n                    // لو الـ AI استسهل وكتبها نص مجمع بنفصلها لـ Objects نظيفة\n                    pc.related_knowledge = pc.related_knowledge.split(/\\n|,|;/).map(l => ({ code: \"\", text: l.trim() })).filter(l => l.text.length > 0);\n                } else {\n                    pc.related_knowledge = [];\n                }\n            });\n        }\n    });\n}\n\n// بنرجع الداتا جوه مفتاح اسمه \"output\" عشان نود الـ HTML بتاعتك متقراش غلط\nreturn [{ json: { output: parsedJson } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        48
+      ],
+      "id": "28b599be-3ceb-496b-bd21-bf626ae20994",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-image-1-mini",
+          "mode": "id"
+        },
+        "prompt": "={{ $json.output.job_title }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1536,
+        272
+      ],
+      "id": "b3314ed2-5b3b-4cd5-ba3f-621c5c2600bd",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "8FchnRRbkOizmgoI",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.imgbb.com/1/upload",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiration",
+              "value": "600"
+            },
+            {
+              "name": "key",
+              "value": "7638e9960eb9faa82f2f826a82d2b86e"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1696,
+        208
+      ],
+      "id": "edcc8636-998f-42c2-9c2f-459760798643",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1824,
+        32
+      ],
+      "id": "13f2c8d5-ba27-4549-93de-97282087372b",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════\n// EXACT MATCH REPLICA — HTML GENERATOR V12 (MERGE NODE COMPATIBLE)\n// Inputs merged into a single clean incoming stream\n// ═══════════════════════════════════════════════\n\n// 1. قراءة البيانات المدمجة القادمة مباشرة من نود الـ Merge\nconst incomingItems = $input.all();\nif (!incomingItems || incomingItems.length === 0) {\n    return [{ json: { error: \"No data received from the Merge node.\" } }];\n}\n\n// سحب الـ output الرئيسي الخاص بالبيانات\nconst inputData = incomingItems[0].json.output;\nif (!inputData) {\n    return [{ json: { error: \"Main 'output' data missing in the merged stream.\" } }];\n}\n\n// 2. قراءة رابط الصورة المباشر المدمج (من نود الـ HTTP Request عبر الـ Merge)\nlet DYNAMIC_WORKER_IMAGE = \"\";\ntry {\n    // بيلقط الرابط سواء كان مدمج في العنصر الأول أو التاني بناءً على نوع الـ Mix في الـ Merge\n    DYNAMIC_WORKER_IMAGE = incomingItems[0].json.data?.url || incomingItems[1]?.json.data?.url || \"\";\n} catch (e) {\n    DYNAMIC_WORKER_IMAGE = \"\"; \n}\n\n// لوجو الوزارة الثابت\nconst LOGO_IMAGE_BASE64 = \"https://via.placeholder.com/70?text=Oman+Logo\";\n\nconst d = {\n    job_title:            inputData.job_title            || \"N/A\",\n    nos_code:             inputData.nos_code             || \"N/A\",\n    occupation:           inputData.occupation           || \"N/A\",\n    sector:               inputData.sector               || \"N/A\",\n    sub_sector:           inputData.sub_sector           || \"N/A\",\n    oqf_level:            inputData.oqf_level            || \"N/A\",\n    isco_08_code:         inputData.isco_08_code         || \"N/A\",\n    isco_08_level:        inputData.isco_08_level        || \"N/A\",\n    gcc_co_code:          inputData.gcc_co_code          || \"From MOL\",\n    job_description:      inputData.job_description      || \"N/A\",\n    job_requirements:     inputData.job_requirements     || \"N/A\",\n    career_opportunities: inputData.career_opportunities || \"N/A\",\n    units_list:           inputData.units_list           || []\n};\n\nconst fixedGenericSkills = [\n    { number: 1,  name: \"Communication\" },\n    { number: 2,  name: \"Numeracy\" },\n    { number: 3,  name: \"Information and Communication Technology Skills\" },\n    { number: 4,  name: \"Values and Ethics\" },\n    { number: 5,  name: \"Managing Work\" },\n    { number: 6,  name: \"Critical Thinking and Problem Solving\" },\n    { number: 7,  name: \"Creativity, Innovation and Entrepreneurship\" },\n    { number: 8,  name: \"Coordinating with Others\" },\n    { number: 9,  name: \"Judgment and Decision Making\" },\n    { number: 10, name: \"Service Orientation\" },\n    { number: 11, name: \"Learning to Learn\" }\n];\n\nfunction reviewDate() {\n    const dt = new Date();\n    dt.setFullYear(dt.getFullYear() + 3);\n    return `01/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;\n}\n\nfunction renderCareerPath(pathString) {\n    if (!pathString || pathString === \"N/A\") return `<p style=\"color:#666;\">No career path data available.</p>`;\n    const levels = pathString.split(\"->\").map(s => s.trim());\n    if (levels.length <= 1) return `<p style=\"line-height:1.8; font-weight:bold;\">${pathString}</p>`;\n    \n    let htmlMarkup = `<div style=\"width:100%; text-align:center; margin:15px 0;\">`;\n    levels.reverse().forEach((lvl, idx) => {\n        let width = 90 - (idx * 12);\n        if (width < 40) width = 40;\n        htmlMarkup += `\n        <div style=\"width:${width}%; background:#FFFDF0; border:1px solid #FFC000; padding:8px; margin:4px auto; font-weight:bold; font-size:12px; color:#000000;\">\n            ${lvl}\n        </div>`;\n    });\n    htmlMarkup += `</div>`;\n    return htmlMarkup;\n}\n\nfunction cleanPcText(text) {\n    if (!text) return \"\";\n    return text.replace(/^(The individual must be able to:|The individual should be able to:)\\s*/i, \"\").trim();\n}\n\nconst officialFooterHtml = `\n<div style=\"margin-top:20px; border-top:1px solid #FFC000; padding-top:6px; font-size:10px; font-weight:bold; color:#444;\">\n  <table style=\"width:100%; border:none; margin:0;\">\n    <tr>\n      <td style=\"border:none; padding:0; font-size:10px; color:#444;\">www.mol.gov.om | www.ssum.om</td>\n      <td style=\"border:none; padding:0; text-align:right; font-size:10px; color:#444;\">www.manpower.gov.om | www.OSC.gov.om | www.opal.org</td>\n    </tr>\n  </table>\n</div>`;\n\nlet html = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>NOS — ${d.job_title}</title>\n<style>\n  body { font-family: Arial, sans-serif; color: #000000; direction: ltr; margin: 30px; line-height: 1.4; }\n  table { width:100%; border-collapse:collapse; margin-bottom:15px; background:#ffffff; }\n  th { background:#FFC000; color:#000000; padding:8px 10px; font-size:12px; border:1px solid #000000; text-align:center; font-weight:bold; text-transform:uppercase; }\n  td { padding:7px 10px; border:1px solid #000000; font-size:11.5px; vertical-align:top; color:#000000; }\n  \n  .lbl-gray { font-weight:bold; background:#FFF9E6; color:#000000; width:25%; }\n  .hdr-sub { background:#FFFDF0; font-weight:bold; color:#000000; text-align:center; }\n  .page-break { page-break-before:always; }\n  \n  .vertical-metrics { font-size:11px; text-align:center; line-height:1.3; }\n  .vertical-metrics div { border-bottom:1px solid #000000; padding:4px 2px; }\n  .vertical-metrics div:last-child { border-bottom:none; }\n  .metric-title { font-weight:bold; background:#FFF9E6; }\n</style>\n</head>\n<body>\n\n<div style=\"width:100%; min-height:950px; border:3px solid #FFC000; padding:40px; box-sizing:border-box; position:relative; background:#ffffff;\">\n  \n  <table style=\"border:none; margin-bottom:40px;\">\n    <tr>\n      <td style=\"border:none; font-weight:bold; font-size:14px; padding:0; line-height:1.5;\">\n        Sultanate of Oman<br>\n        Ministry of Labour\n      </td>\n      <td style=\"border:none; padding:0; text-align:right;\">\n        <img src=\"${LOGO_IMAGE_BASE64}\" alt=\"Oman Logo\" style=\"max-height:70px;\">\n      </td>\n    </tr>\n  </table>\n\n  <div style=\"text-align:center; margin-top:60px;\">\n    <h2 style=\"font-size:18px; font-weight:bold; color:#555; letter-spacing:1px; margin-bottom:5px;\">NATIONAL OCCUPATIONAL STANDARD</h2>\n    <h1 style=\"font-size:28px; font-weight:bold; color:#000; margin:10px 0 5px 0; text-transform:uppercase;\">${d.job_title}</h1>\n    <div style=\"font-family:monospace; font-size:18px; font-weight:bold; color:#444; background:#FFF9E6; display:inline-block; padding:6px 20px; border:1px solid #FFC000; margin-top:5px;\">\n      ${d.nos_code}\n    </div>\n  </div>\n\n  <div style=\"text-align:center; margin:60px 0;\">\n    <img src=\"${DYNAMIC_WORKER_IMAGE}\" alt=\"Worker Image\" style=\"max-width:380px; max-height:400px; border:2px solid #FFC000; border-radius:4px; box-shadow: 0px 4px 10px rgba(0,0,0,0.05); error: url('https://via.placeholder.com/350x250?text=Worker+Image');\">\n  </div>\n\n  <div style=\"position:absolute; bottom:40px; left:40px; right:40px;\">\n    <div style=\"font-size:12px; font-weight:bold; margin-bottom:10px; color:#333;\">Supported by:</div>\n    <div style=\"border-top:2px solid #FFC000; padding-top:10px; font-size:11px; font-weight:bold; display:flex; justify-content:space-between; color:#555;\">\n      <span>www.mol.gov.om | www.ssum.om</span>\n      <span style=\"text-align:right;\">www.manpower.gov.om | www.OSC.gov.om | www.opal.org</span>\n    </div>\n  </div>\n</div>\n\n<div class=\"page-break\"></div>\n\n<table style=\"border:none; margin-bottom:5px;\">\n  <tr>\n    <td style=\"border:none; font-weight:bold; color:#333333; font-size:11px; padding:0;\">\n      Ministry of Labour — Sultanate of Oman<br>\n      <span style=\"font-size:10px; font-weight:normal;\">وزارة العمل — سلطنة عُمان</span>\n    </td>\n    <td style=\"border:none; font-weight:bold; color:#333333; font-size:11px; text-align:right; padding:0;\">\n      General Directorate of Training<br>\n      <span style=\"font-size:10px; font-weight:normal;\">المديرية العامة للتدريب</span>\n    </td>\n  </tr>\n</table>\n\n<hr style=\"border:none; border-top:2px solid #FFC000; margin:5px 0 15px 0;\">\n\n<div style=\"text-align:center; color:#000000; font-size:22px; font-weight:bold; letter-spacing:1px; margin-top:10px;\">NATIONAL OCCUPATIONAL STANDARDS (NOS)</div>\n<div style=\"text-align:center; color:#333333; font-size:11px; font-weight:bold; margin-bottom:5px;\">المعايير المهنية الوطنية</div>\n<div style=\"text-align:center; font-size:14px; color:#333333; font-weight:bold; margin-bottom:25px;\">${d.job_title.toUpperCase()}</div>\n\n<table>\n  <thead><tr><th colspan=\"4\">NOS Specifications | مواصفات المعيار المهني الوطني</th></tr></thead>\n  <tbody>\n    <tr>\n      <td class=\"lbl-gray\">Job Title</td>\n      <td style=\"font-weight:bold;\">${d.job_title}</td>\n      <td class=\"lbl-gray\">NOS Code</td>\n      <td style=\"font-family:monospace; font-weight:bold;\">${d.nos_code}</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">Occupation</td><td>${d.occupation}</td>\n      <td class=\"lbl-gray\">Sector</td><td>${d.sector}</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">Sub-Sector</td><td>${d.sub_sector}</td>\n      <td class=\"lbl-gray\">OQF Level</td><td><strong>${d.oqf_level}</strong></td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">ISCO-08 code</td><td>${d.isco_08_code}</td>\n      <td class=\"lbl-gray\">ISCO-08 Level</td><td>${d.isco_08_level}</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">GCC CO Code</td><td>${d.gcc_co_code}</td>\n      <td class=\"lbl-gray\">Document Version</td><td>01</td>\n    </tr>\n  </tbody>\n</table>\n\n<table>\n  <thead><tr><th>Job Description | الوصف الوظيفي</th></tr></thead>\n  <tbody><tr><td style=\"line-height:1.6; text-align:justify;\">${d.job_description}</td></tr></tbody>\n</table>\n\n<table>\n  <thead><tr><th>Job Specific Requirements | المتطلبات الخاصة بالوظيفة</th></tr></thead>\n  <tbody>\n    <tr>\n      <td>\n        <ul style=\"margin:0; padding-left:20px; line-height:1.6;\">\n          ${Array.isArray(d.job_requirements) ? d.job_requirements.map(r => `<li style=\"margin:3px 0;\">${r}</li>`).join('') : `<li style=\"margin:3px 0;\">${d.job_requirements}</li>`}\n        </ul>\n      </td>\n    </tr>\n  </tbody>\n</table>\n\n<table>\n  <thead>\n    <tr><th colspan=\"4\">Unit Standards (US) | الوحدات المعيارية المعتمدة للوظيفة</th></tr>\n    <tr>\n      <td class=\"hdr-sub\" style=\"width:18%;\">Unit Code</td>\n      <td class=\"hdr-sub\" style=\"width:54%;\">Unit Standard Title</td>\n      <td class=\"hdr-sub\" style=\"width:14%;\">Type</td>\n      <td class=\"hdr-sub\" style=\"width:14%;\">OQF Level</td>\n    </tr>\n  </thead>\n  <tbody>`;\n\nconst domainUnits  = d.units_list.filter(u => u.unit_type === \"Domain\" || u.unit_type === \"Domain Specific\");\nconst genericUnits = d.units_list.filter(u => u.unit_type === \"Generic\");\nconst electiveUnits= d.units_list.filter(u => u.unit_type === \"Elective\");\n\nfunction writeUnitRow(u, idx) {\n    return `<tr>\n      <td style=\"font-family:monospace; font-weight:bold; text-align:center;\">${u.unit_code}</td>\n      <td>${idx+1}. ${u.unit_title}</td>\n      <td style=\"text-align:center; font-weight:bold;\">${u.unit_type}</td>\n      <td style=\"text-align:center; font-weight:bold;\">${u.oqf_level}</td>\n    </tr>`;\n}\n\nif (domainUnits.length) {\n    html += `<tr><td colspan=\"4\" style=\"background:#FFF9E6; font-weight:bold; padding:5px 10px;\">Domain Specific Units</td></tr>`;\n    domainUnits.forEach((u,i) => { html += writeUnitRow(u,i); });\n}\nif (genericUnits.length) {\n    html += `<tr><td colspan=\"4\" style=\"background:#FFF9E6; font-weight:bold; padding:5px 10px;\">Generic Units</td></tr>`;\n    genericUnits.forEach((u,i) => { html += writeUnitRow(u,i); });\n}\nif (electiveUnits.length) {\n    html += `<tr><td colspan=\"4\" style=\"background:#FFF9E6; font-weight:bold; padding:5px 10px;\">Elective Units</td></tr>`;\n    electiveUnits.forEach((u,i) => { html += writeUnitRow(u,i); });\n}\n\nhtml += `</tbody></table>\n\n<table>\n  <thead><tr><th>Career Opportunities | هرم التطور المهني التدريجي</th></tr></thead>\n  <tbody><tr><td style=\"background:#ffffff; padding:15px;\">${renderCareerPath(d.career_opportunities)}</td></tr></tbody>\n</table>\n\n<table>\n  <thead><tr><th colspan=\"4\">NOS Version Control | التحكم في إصدار المعيار الرئيسي</th></tr></thead>\n  <tbody>\n    <tr>\n      <td class=\"lbl-gray\" style=\"width:25%;\">Approved on:</td>\n      <td>Insert dd/mm/yyyy per OSC approval date</td>\n      <td class=\"lbl-gray\" style=\"width:25%;\">Next Review date:</td>\n      <td style=\"font-weight:bold;\">${reviewDate()}</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">Version Number:</td>\n      <td colspan=\"3\">01</td>\n    </tr>\n  </tbody>\n</table>`;\n\nhtml += officialFooterHtml;\n\n// حلقة تفاصيل الوحدات\nd.units_list.forEach((unit, unitIdx) => {\n\n    const currentUnitTypeHeader = unit.unit_type === \"Generic\" ? \"GENERIC UNIT STANDARDS\" : \"DOMAIN SPECIFIC UNIT STANDARDS\";\n\n    if (unit.performance_criteria_list && Array.isArray(unit.performance_criteria_list)) {\n        unit.performance_criteria_list.sort((a, b) => {\n            const numA = parseInt(a.pc_code.replace(/\\D/g, '')) || 0;\n            const numB = parseInt(b.pc_code.replace(/\\D/g, '')) || 0;\n            return numA - numB;\n        });\n    }\n\n    html += `<div class=\"page-break\"></div>\n\n<table style=\"margin-top:0;\">\n  <thead>\n    <tr><th style=\"background:#FFC000; text-align:left; padding:8px 12px; font-size:12px; color:#000000;\">${currentUnitTypeHeader}</th></tr>\n  </thead>\n</table>\n\n<table>\n  <tr>\n    <td class=\"lbl-gray\" style=\"width:25%;\">Unit Standard Code:</td>\n    <td style=\"font-family:monospace; font-weight:bold;\">${unit.unit_code}</td>\n  </tr>\n  <tr>\n    <td class=\"lbl-gray\">Unit Standard Title:</td>\n    <td style=\"font-weight:bold;\">${unit.unit_title}</td>\n  </tr>\n</table>\n\n<table>\n  <thead><tr><th>Overview</th></tr></thead>\n  <tbody><tr><td style=\"line-height:1.6; text-align:justify;\">${unit.overview}</td></tr></tbody>\n</table>\n\n<table>\n  <thead><tr><th>Scope</th></tr></thead>\n  <tbody>\n    <tr>\n      <td>\n        <p style=\"margin:0 0 5px; font-weight:bold;\">The scope of this unit standard requires the individual to demonstrate skills and knowledge in the following areas:</p>\n        <ul style=\"margin:0; padding-left:20px; line-height:1.5;\">`;\n    (unit.scope_elements || []).forEach(el => {\n        html += `<li style=\"margin:2px 0;\">${el}</li>`;\n    });\n    html += `</ul>\n      </td>\n    </tr>\n  </tbody>\n</table>\n\n<table>\n  <thead><tr><th>Performance Criteria (PC)</th></tr></thead>\n  <tbody>\n    <tr><td style=\"font-weight:bold; background:#FFFDF0; font-style:italic; font-size:11px;\">The individual must be able to:</td></tr>`;\n    (unit.performance_criteria_list || []).forEach(pc => {\n        html += `<tr><td><strong>${pc.pc_code}</strong> &nbsp; ${cleanPcText(pc.pc_text)}</td></tr>`;\n    });\n    html += `</tbody></table>`;\n\n    html += `<table>\n  <thead>\n    <tr>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">Ref.</td>\n      <td class=\"hdr-sub\" style=\"width:76%;\">Unit Elements, Performance Criteria (PC) and Knowledge (K) required</td>\n      <td class=\"hdr-sub\" style=\"width:18%; text-align:center; padding:0;\">Assessment Weighting</td>\n    </tr>\n  </thead>\n  <tbody>`;\n\n    const elementGroups = {};\n    (unit.performance_criteria_list || []).forEach(pc => {\n        const elRef = pc.element_ref || \"Element 1\";\n        if (!elementGroups[elRef]) elementGroups[elRef] = [];\n        elementGroups[elRef].push(pc);\n    });\n\n    const scopeMap = {};\n    (unit.scope_elements || []).forEach((el, i) => {\n        scopeMap[`Element ${i+1}`] = el;\n    });\n\n    Object.keys(elementGroups).forEach(elKey => {\n        const elFullTitle = scopeMap[elKey] || elKey;\n        html += `<tr>\n          <td colspan=\"3\" style=\"background:#FFF9E6; font-weight:bold; padding:6px 10px;\">\n            ${elKey}: ${elFullTitle}\n          </td>\n        </tr>`;\n\n        elementGroups[elKey].forEach(pc => {\n            const impVal = parseInt(pc.importance) || 3;\n            const difVal = parseInt(pc.difficulty) || 3;\n            const totVal = impVal + difVal;\n\n            html += `<tr>\n              <td style=\"font-weight:bold; text-align:center; vertical-align:top; padding-top:8px;\">${pc.pc_code}</td>\n              <td style=\"vertical-align:top;\">\n                <p style=\"margin:0 0 5px; font-weight:bold;\">${cleanPcText(pc.pc_text)}</p>\n                <p style=\"margin:0 0 4px; font-size:10.5px; font-style:italic; color:#333333;\">The individual must know and understand:</p>`;\n\n            const kContent = pc.related_knowledge;\n            if (Array.isArray(kContent)) {\n                kContent.forEach((kObj, kIdx) => {\n                    if (kObj && typeof kObj === 'object') {\n                        const codeString = kObj.code ? `${kObj.code}` : `K ${pc.pc_code.replace('PC','').trim()}.${kIdx+1}`;\n                        html += `<p style=\"margin:3px 0; font-size:11px;\"><strong>${codeString}:</strong> ${kObj.text || ''}</p>`;\n                    } else if (typeof kObj === 'string') {\n                        const codeString = `K ${pc.pc_code.replace('PC','').trim()}.${kIdx+1}`;\n                        html += `<p style=\"margin:3px 0; font-size:11px;\"><strong>${codeString}:</strong> ${kObj}</p>`;\n                    }\n                });\n            } else if (typeof kContent === 'string' && kContent.trim().length > 0) {\n                const kLines = kContent.split(/\\n|,|;/).map(l => l.trim()).filter(l => l.length > 0);\n                kLines.forEach((line, lineIdx) => {\n                    const codeString = `K ${pc.pc_code.replace('PC','').trim()}.${lineIdx+1}`;\n                    html += `<p style=\"margin:3px 0; font-size:11px;\"><strong>${codeString}:</strong> ${line}</p>`;\n                });\n            }\n\n            html += `</td>\n              <td style=\"padding:0; vertical-align:stretch;\">\n                <div class=\"vertical-metrics\">\n                  <div class=\"metric-title\">Total Weight</div>\n                  <div style=\"font-weight:bold; background:#FFFDF0;\">${totVal}</div>\n                  <div class=\"metric-title\">Importance</div>\n                  <div>${impVal}</div>\n                  <div class=\"metric-title\">Difficulty</div>\n                  <div>${difVal}</div>\n                </div>\n              </td>\n            </tr>`;\n        });\n    });\n\n    html += `</tbody></table>`;\n\n    html += `<table>\n  <thead><tr><th>Skills</th></tr></thead>\n  <tbody>\n    <tr><td style=\"background:#FFF9E6; font-weight:bold;\">Domain Skills</td></tr>\n    <tr>\n      <td style=\"line-height:1.5;\">\n        <p style=\"margin:0 0 4px; font-style:italic; font-size:11px;\">The individual needs to know and understand how to:</p>`;\n    (unit.domain_skills || []).forEach(ds => {\n        html += `<p style=\"margin:2px 0;\">${ds}</p>`;\n    });\n    html += `</td></tr>\n  </tbody>\n</table>`;\n\n    html += `<table>\n  <thead>\n    <tr><th colspan=\"7\" style=\"background:#FFC000; color:#000000;\">Generic Skills | المهارات العامة</th></tr>\n    <tr>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">Ref.</td>\n      <td class=\"hdr-sub\" style=\"width:58%;\">Skills</td>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">N/A</td>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">1</td>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">2</td>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">3</td>\n      <td class=\"hdr-sub\" style=\"width:6%; text-align:center;\">4</td>\n    </tr>\n  </thead>\n  <tbody>`;\n\n    fixedGenericSkills.forEach(gs => {\n        html += `<tr>\n          <td style=\"text-align:center; font-weight:bold;\">${gs.number}</td>\n          <td>${gs.name}</td>\n          <td style=\"text-align:center;\"></td>\n          <td style=\"text-align:center;\"></td>\n          <td style=\"text-align:center;\"></td>\n          <td style=\"text-align:center;\"></td>\n          <td style=\"text-align:center;\"></td>\n        </tr>`;\n    });\n\n    html += `</tbody></table>`;\n\n    html += `<table>\n  <thead><tr><th colspan=\"4\" style=\"background:#FFC000; color:#000000;\">Unit Version Control | التحكم في إصدار الوحدة</th></tr></thead>\n  <tbody>\n    <tr>\n      <td class=\"lbl-gray\" style=\"width:25%;\">Unit Code:</td><td style=\"font-family:monospace; font-weight:bold;\">${unit.unit_code}</td>\n      <td class=\"lbl-gray\" style=\"width:25%;\">Unit Title:</td><td style=\"font-weight:bold;\">${unit.unit_title}</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">Sector:</td><td>${d.sector}</td>\n      <td class=\"lbl-gray\">Version Number:</td><td>01</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">Sub-Sector:</td><td>${d.sub_sector}</td>\n      <td class=\"lbl-gray\">Approved on:</td><td>Insert dd/mm/yyyy per GDT-MOL approval date</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">Occupation:</td><td>${d.occupation}</td>\n      <td class=\"lbl-gray\">Review date:</td><td style=\"font-weight:bold;\">01/,,,,/2025</td>\n    </tr>\n    <tr>\n      <td class=\"lbl-gray\">OQF Level:</td><td colspan=\"3\"><strong>${unit.oqf_level}</strong></td>\n    </tr>\n  </tbody>\n</table>`;\n\n    html += officialFooterHtml;\n\n});\n\n// ═══════════════════════════════════════════════\n// إضافة صفحة الاختصارات ديناميكياً في آخر الملف تماماً (خارج حلقة الوحدات)\n// ═══════════════════════════════════════════════\nlet abbrevList = [];\nif (inputData.abbreviations && Array.isArray(inputData.abbreviations)) {\n    abbrevList = inputData.abbreviations;\n} else if (inputData.abbreviations_list && Array.isArray(inputData.abbreviations_list)) {\n    abbrevList = inputData.abbreviations_list;\n} else {\n    // القاموس الاحتياطي القياسي في حال عدم إرسال داتا عبر النود\n    const refDict = {\n        \"NOS\": \"National Occupational Standards\",\n        \"MOL\": \"Ministry of Labour\",\n        \"US\": \"Unit Standard\",\n        \"OQF\": \"Oman Qualification Framework\",\n        \"PC\": \"Performance Criteria\",\n        \"K\": \"Knowledge\",\n        \"PPE\": \"Personal Protective Equipment\",\n        \"HSE\": \"Health, Safety and Environment\"\n    };\n    Object.keys(refDict).forEach(k => abbrevList.push({ term: k, explanation: refDict[k] }));\n}\n\nif (abbrevList.length > 0) {\n    html += `<div class=\"page-break\"></div>\n    <table style=\"margin-top:0;\">\n      <thead>\n        <tr><th colspan=\"2\" style=\"background:#FFC000; color:#000000; text-align:left; padding:8px 12px; font-weight:bold;\">ABBREVIATIONS AND TECHNICAL TERMS</th></tr>\n        <tr>\n          <td class=\"hdr-sub\" style=\"width:30%; font-weight:bold; background:#FFF9E6; text-align:center;\">Abbreviation / Term</td>\n          <td class=\"hdr-sub\" style=\"font-weight:bold; background:#FFF9E6; text-align:left; padding-left:15px;\">Explanation</td>\n        </tr>\n      </thead>\n      <tbody>\n        ${abbrevList.map(item => {\n            const termStr = item.term || item.abbreviation || Object.keys(item)[0] || \"N/A\";\n            const expStr = item.explanation || item.description || Object.values(item)[0] || \"N/A\";\n            return `<tr>\n                <td style=\"font-weight:bold; text-align:center; background:#fdfdfd; font-family:monospace; font-size:12px;\">${termStr}</td>\n                <td style=\"padding:7px 12px; text-align:justify; line-height:1.5;\">${expStr}</td>\n            </tr>`;\n        }).join('')}\n      </tbody>\n    </table>`;\n    \n    html += officialFooterHtml;\n}\n\nhtml += `</body></html>`;\n\nreturn [{ json: { html: html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        32
+      ],
+      "id": "f9f7a844-5e83-449f-a2fc-de7f9459669a",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "AI Agent BluePrint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent BluePrint",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "job_code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent BluePrint": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fa1ee57e-0be8-4a98-b4a7-a2bff416250e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "63fc54770af815f145b9771b7280d33c4c897ef8e1a7c037fc423c03d2741f3e"
+  },
+  "id": "AYtsUnbXYjE3WoSs",
+  "tags": []
+}
